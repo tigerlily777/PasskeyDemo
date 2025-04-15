@@ -1,18 +1,21 @@
 package com.example.passkeydemo
 
 import androidx.lifecycle.ViewModel
+import com.example.passkeydemo.ui.CredentialUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class PasskeyViewModel: ViewModel() {
-    private val _uiState = MutableStateFlow(PasskeyUiState())
-    val uiState: StateFlow<PasskeyUiState> = _uiState
+class PasskeyViewModel : ViewModel() {
 
-    fun onLoginClicked() {
-        _uiState.value = _uiState.value.copy(
-            isLoading = true,
-            message = "Login clicked"
-        )
+    private val _uiState = MutableStateFlow(CredentialUiState())
+    val uiState: StateFlow<CredentialUiState> = _uiState
 
+    fun signInWithPasskey() {
+        // TODO: use CredentialManager handle passkey login
     }
+
+    fun updateMessage(msg: String) {
+        _uiState.value = _uiState.value.copy(message = msg)
+    }
+
 }
