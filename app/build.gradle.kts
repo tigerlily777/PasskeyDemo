@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -62,5 +64,12 @@ dependencies {
     //credential manager
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
+
+    //DI
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+
+    // ViewModel + Hilt
+    implementation(libs.androidx.hilt.navigation.compose)
 
 }
