@@ -1,17 +1,51 @@
 package com.example.passkeydemo
 
+import android.annotation.SuppressLint
+import android.content.Context
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.GetPasswordOption
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
-import com.example.passkeydemo.ui.CredentialUiState
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class PasskeyViewModel : ViewModel() {
+@SuppressLint("StaticFieldLeak")
+class PasskeyViewModel (
+    private val credentialManager: CredentialManager
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(CredentialUiState())
-    val uiState: StateFlow<CredentialUiState> = _uiState
+    private val _uiState = MutableStateFlow(PasskeyUiState())
+    val uiState: StateFlow<PasskeyUiState> = _uiState
+
 
     fun signInWithPasskey() {
-        // TODO: use CredentialManager handle passkey login
+
+
+    }
+
+    fun signInWithCredentialManager(
+        activityContext: Context,
+        onSuccess: (GetCredentialResponse) -> Unit,
+        onError: (GetCredentialException) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val result = credentialManager.getCredential(
+                    context = activityContext,
+                    request = GetCredentialRequest(
+                        // 先简单只用密码登录请求
+                        credentialOptions = listOf(GetPasswordOption())
+                    )
+                )
+                onSuccess(result)
+            } catch (e: GetCredentialException) {
+                onError(e)
+            }
+        }
     }
 
     fun updateMessage(msg: String) {

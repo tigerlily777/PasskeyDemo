@@ -1,6 +1,6 @@
 package com.example.passkeydemo
 
 data class PasskeyUiState(
-    val isLoading: Boolean = false,
-    val message: String = ""
+    val isSignedIn: Boolean = false,
+    val message: String? = null
 )
