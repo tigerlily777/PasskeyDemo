@@ -6,6 +6,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.GetPasswordOption
+import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,7 +26,29 @@ class PasskeyViewModel @Inject constructor(
     val uiState: StateFlow<PasskeyUiState> = _uiState
 
 
-    fun signInWithPasskey() {
+    fun signInWithPasskey(context: Context) {
+        viewModelScope.launch {
+            try {
+                val result = credentialManager.getCredential(
+                    context = context,
+                    request = GetCredentialRequest(
+                        credentialOptions = listOf(
+                            GetPublicKeyCredentialOption(requestJson = "{}"),
+                            GetPasswordOption()
+                        )
+                    )
+                )
+                _uiState.value = _uiState.value.copy(
+                    isSignedIn = true,
+                    message = "Sign-in successful! Credential type: ${result.credential.javaClass.simpleName}"
+                )
+
+            } catch (e: GetCredentialException) {
+                _uiState.value = _uiState.value.copy(
+                    message = "Sign-in failed: ${e.message}"
+                )
+            }
+        }
 
 
     }
@@ -40,7 +63,6 @@ class PasskeyViewModel @Inject constructor(
                 val result = credentialManager.getCredential(
                     context = activityContext,
                     request = GetCredentialRequest(
-                        // 先简单只用密码登录请求
                         credentialOptions = listOf(GetPasswordOption())
                     )
                 )
