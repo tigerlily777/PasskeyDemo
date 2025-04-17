@@ -6,6 +6,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPasswordOption
 import androidx.credentials.GetPublicKeyCredentialOption
+import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -41,12 +42,30 @@ class PasskeyViewModel @Inject constructor(
                     isSignedIn = true,
                     message = "Sign-in successful! Credential type: ${result.credential.javaClass.simpleName}"
                 )
+                when (val credential = result.credential) {
+                    is PublicKeyCredential -> {
+                        val registrationResponseJson = credential.authenticationResponseJson
+                        // send registrationResponseJson to backend for verification
+                        updateMessage("Successfully signed in with Passkey!")
+                    }
 
+                    is androidx.credentials.PasswordCredential -> {
+                        val username = credential.id
+                        val password = credential.password
+                        updateMessage("Signed in with username: $username")
+                    }
+
+                    else -> {
+                        updateMessage("Unknown credential type: ${credential.javaClass.simpleName}")
+                    }
+                }
             } catch (e: GetCredentialException) {
                 _uiState.value = _uiState.value.copy(
                     message = "Sign-in failed: ${e.message}"
                 )
             }
+
+
         }
 
 
@@ -81,4 +100,7 @@ class PasskeyViewModel @Inject constructor(
     """.trimIndent()
     }
 
+    private fun updateMessage(msg: String) {
+        _uiState.value = _uiState.value.copy(message = msg)
+    }
 }
