@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetCredentialResponse
 import androidx.credentials.GetPasswordOption
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.exceptions.GetCredentialException
@@ -33,7 +32,7 @@ class PasskeyViewModel @Inject constructor(
                     context = context,
                     request = GetCredentialRequest(
                         credentialOptions = listOf(
-                            GetPublicKeyCredentialOption(requestJson = "{}"),
+                            GetPublicKeyCredentialOption(requestJson = createFakePasskeyRequestJson()),
                             GetPasswordOption()
                         )
                     )
@@ -53,28 +52,33 @@ class PasskeyViewModel @Inject constructor(
 
     }
 
-    fun signInWithCredentialManager(
-        activityContext: Context,
-        onSuccess: (GetCredentialResponse) -> Unit,
-        onError: (GetCredentialException) -> Unit
-    ) {
-        viewModelScope.launch {
-            try {
-                val result = credentialManager.getCredential(
-                    context = activityContext,
-                    request = GetCredentialRequest(
-                        credentialOptions = listOf(GetPasswordOption())
-                    )
-                )
-                onSuccess(result)
-            } catch (e: GetCredentialException) {
-                onError(e)
-            }
+    private fun createFakePasskeyRequestJson(): String {
+        return """
+        {
+          "challenge": "fakeChallenge123",
+          "rp": {
+            "name": "Passkey Demo App",
+            "id": "passkey-demo.example.com"
+          },
+          "user": {
+            "id": "fakeUserId456",
+            "name": "user@example.com",
+            "displayName": "user@example.com"
+          },
+          "pubKeyCredParams": [
+            {"type": "public-key", "alg": -7},
+            {"type": "public-key", "alg": -257}
+          ],
+          "timeout": 60000,
+          "attestation": "none",
+          "authenticatorSelection": {
+            "authenticatorAttachment": "platform",
+            "requireResidentKey": true,
+            "residentKey": "required",
+            "userVerification": "required"
+          }
         }
-    }
-
-    fun updateMessage(msg: String) {
-        _uiState.value = _uiState.value.copy(message = msg)
+    """.trimIndent()
     }
 
 }
