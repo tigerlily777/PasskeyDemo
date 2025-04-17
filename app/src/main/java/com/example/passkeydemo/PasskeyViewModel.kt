@@ -28,6 +28,7 @@ class PasskeyViewModel @Inject constructor(
 
     fun signInWithPasskey(context: Context) {
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
             try {
                 val result = credentialManager.getCredential(
                     context = context,
@@ -63,12 +64,10 @@ class PasskeyViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     message = "Sign-in failed: ${e.message}"
                 )
+            } finally {
+                _uiState.value = _uiState.value.copy(isLoading = false)
             }
-
-
         }
-
-
     }
 
     private fun createFakePasskeyRequestJson(): String {
