@@ -37,9 +37,19 @@ fun PasskeyScreen(viewModel: PasskeyViewModel) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            val context = LocalContext.current
+            val currentContext = LocalContext.current
             Button(
-                onClick = { viewModel.signInWithPasskey(context = context) },
+                onClick = {
+                    viewModel.registerPasskey(currentContext)
+                },
+                enabled = !uiState.value.isLoading
+            ) {
+                Text(if (uiState.value.isLoading) "Loading..." else "Register Passkey")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = { viewModel.signInWithPasskey(context = currentContext) },
                 enabled = !uiState.value.isLoading
             ) {
                 if (uiState.value.isLoading) {
@@ -53,7 +63,6 @@ fun PasskeyScreen(viewModel: PasskeyViewModel) {
         }
     }
 
-    // ✨ 如果 uiState 的 message 有变化，就弹出 snackbar
     LaunchedEffect(uiState.value.message) {
         uiState.value.message?.let { message ->
             snackbarHostState.showSnackbar(message)
