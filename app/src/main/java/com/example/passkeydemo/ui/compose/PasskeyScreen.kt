@@ -57,6 +57,7 @@ fun PasskeyScreen(viewModel: PasskeyViewModel) {
     LaunchedEffect(uiState.value.message) {
         uiState.value.message?.let { message ->
             snackbarHostState.showSnackbar(message)
+            viewModel.clearMessage()
         }
     }
 }
