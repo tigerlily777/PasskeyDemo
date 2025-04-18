@@ -2,11 +2,13 @@ package com.example.passkeydemo
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPasswordOption
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
+import androidx.credentials.exceptions.CreateCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +27,36 @@ class PasskeyViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PasskeyUiState())
     val uiState: StateFlow<PasskeyUiState> = _uiState
 
+    @SuppressLint("PublicKeyCredential")
+    fun registerPasskey(context: Context) {
+        viewModelScope.launch {
+            setLoading(true)
+            try {
+                val registrationRequestJson = createFakeRegistrationRequestJson()
+                val result = credentialManager.createCredential(
+                    context = context,
+                    request = CreatePublicKeyCredentialRequest(
+                        requestJson = registrationRequestJson
+                    )
+                )
+                when (val credential = result.type) {
+                    PublicKeyCredential.TYPE_PUBLIC_KEY_CREDENTIAL -> {
+                        setSignedIn(true)
+                        setMessage("Successfully registered passkey!")
+                    }
+
+                    else -> {
+                        setMessage("Unknown credential type: ${credential.javaClass.simpleName}")
+                    }
+                }
+
+            } catch (e: CreateCredentialException) {
+                setMessage("Failed to register passkey: ${e.errorMessage}")
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
 
     fun signInWithPasskey(context: Context) {
         viewModelScope.launch {
@@ -62,6 +94,22 @@ class PasskeyViewModel @Inject constructor(
         }
     }
 
+    fun clearMessage() {
+        _uiState.value = _uiState.value.copy(message = null)
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        _uiState.value = _uiState.value.copy(isLoading = isLoading)
+    }
+
+    private fun setMessage(message: String?) {
+        _uiState.value = _uiState.value.copy(message = message)
+    }
+
+    private fun setSignedIn(signedIn: Boolean) {
+        _uiState.value = _uiState.value.copy(isSignedIn = signedIn)
+    }
+
     private fun createFakePasskeyRequestJson(): String {
         return """
         {
@@ -91,19 +139,32 @@ class PasskeyViewModel @Inject constructor(
     """.trimIndent()
     }
 
-    fun clearMessage() {
-        _uiState.value = _uiState.value.copy(message = null)
+    private fun createFakeRegistrationRequestJson(): String {
+        return """
+    {
+      "challenge": "fakeRegistrationChallenge123",
+      "rp": {
+        "name": "Passkey Demo App",
+        "id": "passkey-demo.example.com"
+      },
+      "user": {
+        "id": "newFakeUserId456",
+        "name": "newuser@example.com",
+        "displayName": "New User"
+      },
+      "pubKeyCredParams": [
+        {"type": "public-key", "alg": -7},
+        {"type": "public-key", "alg": -257}
+      ],
+      "timeout": 60000,
+      "attestation": "none",
+      "authenticatorSelection": {
+        "authenticatorAttachment": "platform",
+        "requireResidentKey": true,
+        "residentKey": "required",
+        "userVerification": "required"
+      }
     }
-
-    private fun setLoading(isLoading: Boolean) {
-        _uiState.value = _uiState.value.copy(isLoading = isLoading)
-    }
-
-    private fun setMessage(message: String?) {
-        _uiState.value = _uiState.value.copy(message = message)
-    }
-
-    private fun setSignedIn(signedIn: Boolean) {
-        _uiState.value = _uiState.value.copy(isSignedIn = signedIn)
+    """.trimIndent()
     }
 }
